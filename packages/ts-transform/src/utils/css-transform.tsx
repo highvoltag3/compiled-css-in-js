@@ -4,6 +4,7 @@ import cssnano from 'cssnano-preset-default';
 import nested from 'postcss-nested';
 import whitespace from 'postcss-normalize-whitespace';
 import { TransformerOptions } from '../types';
+import { hash } from './hash';
 
 const minify = () => {
   const preset = cssnano();
@@ -68,6 +69,7 @@ const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-prope
       return;
     }
 
+    const tokenPrefix = opts.tokenPrefix || 'cc';
     const tokens = opts.tokens;
 
     root.walkDecls(/color/, decl => {
@@ -77,6 +79,7 @@ const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-prope
           const tokenName = match[1];
           const rawName = tokens.default[tokenName];
           decl.value = tokens.base[rawName];
+          decl.cloneBefore({ value: `var(--${tokenPrefix}-${hash(tokenName)})` });
         }
       }
     });
