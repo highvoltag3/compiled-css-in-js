@@ -3,6 +3,7 @@ import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano-preset-default';
 import nested from 'postcss-nested';
 import whitespace from 'postcss-normalize-whitespace';
+import { TransformerOptions } from '../types';
 
 const minify = () => {
   const preset = cssnano();
@@ -61,19 +62,37 @@ const extractStyleSheets = plugin<{ callback: (sheet: string) => void }>(
   }
 );
 
-interface Opts {
-  minify?: boolean;
-}
+const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-properties', opts => {
+  return root => {
+    if (!opts || !opts.tokens) {
+      return;
+    }
+
+    const tokens = opts.tokens;
+
+    root.walkDecls(/color/, decl => {
+      if (decl.value.includes('theme(')) {
+        const match = decl.value.match(/theme\((.+)\)/);
+        if (match) {
+          const tokenName = match[1];
+          const rawName = tokens.default[tokenName];
+          decl.value = tokens.base[rawName];
+        }
+      }
+    });
+  };
+});
 
 export const transformCss = (
   selector: string,
   css: string,
-  opts: Opts = { minify: false }
+  opts: TransformerOptions = { minify: false }
 ): string[] => {
   const sheets: string[] = [];
   const cssWithSelector = selector ? `${selector} { ${css} }` : css;
 
   const result = postcss([
+    replaceThemedProperties(opts),
     parentOrphenedPseudos(),
     nested(),
     autoprefixer({
