@@ -121,7 +121,11 @@ ${errors.join('\n')}`
   };
 });
 
-export const transformCss = (selector: string, css: string, opts: TransformerOptions): string[] => {
+export const transformCss = (
+  selector: string,
+  css: string,
+  opts: TransformerOptions = {}
+): string[] => {
   const sheets: string[] = [];
   const cssWithSelector = selector ? `${selector} { ${css} }` : css;
 
