@@ -4,8 +4,8 @@ import cssnano from 'cssnano-preset-default';
 import nested from 'postcss-nested';
 import whitespace from 'postcss-normalize-whitespace';
 import { TransformerOptions, Tokens } from '../types';
-import { hash } from './hash';
 import { CLASS_NAME_PREFIX } from '../constants';
+import { getTokenCssVariable } from './theme';
 
 const minify = () => {
   const preset = cssnano();
@@ -82,8 +82,8 @@ const getPossibleTokenNameFromBaseValue = (value: string, tokens: Tokens) => {
   return undefined;
 };
 
-const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-properties', opts => {
-  return root => {
+const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-properties', (opts) => {
+  return (root) => {
     if (!opts || !opts.tokens) {
       return;
     }
@@ -92,14 +92,17 @@ const replaceThemedProperties = plugin<TransformerOptions>('replace-themed-prope
     const tokens = opts.tokens;
     const errors: string[] = [];
 
-    root.walkDecls(/color/, decl => {
+    root.walkDecls(/color/, (decl) => {
       if (decl.value.includes('theme(')) {
         const match = decl.value.match(/theme\((.+)\)/);
         if (match) {
           const tokenName = match[1];
           const rawName = tokens.default[tokenName];
-          decl.value = tokens.base[rawName];
-          decl.cloneAfter({ value: `var(--${tokenPrefix}-${hash(tokenName)})` });
+          decl.value = getTokenCssVariable(tokenName, {
+            tokenPrefix,
+            defaultValue: tokens.base[rawName],
+            useVariable: true,
+          });
         }
       } else if (opts.strict) {
         let errorMessage = `"${decl.toString()};"`;
