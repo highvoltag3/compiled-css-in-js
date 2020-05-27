@@ -4,7 +4,7 @@ import '@compiled/css-in-js';
 const borderRadius = () => 3;
 const gridSize = () => 8;
 
-const backgroundColor = 'red';
+const backgroundColor = 'green';
 const textColor = 'blue';
 const BORDER_RADIUS = `${borderRadius()}px`;
 const HORIZONTAL_SPACING = `${gridSize() / 2}px`;
